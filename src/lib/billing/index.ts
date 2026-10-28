@@ -1,6 +1,7 @@
 export * from "./dates";
 export * from "./draft";
 export * from "./generate";
+export * from "./issue";
 export * from "./late-fee";
 export * from "./meter";
 export * from "./money";

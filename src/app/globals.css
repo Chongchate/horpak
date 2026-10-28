@@ -1,26 +1,88 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * Horpak design tokens.
+ * Ballpoint-blue ink on cool office paper; amber for electricity, teal for water.
+ * The one loud element is the meter counter (see .odo) — everything else stays quiet.
+ */
+@theme {
+  --color-paper: #eef1f5;
+  --color-surface: #ffffff;
+  --color-ink: #17233a;
+  --color-muted: #5b6577;
+  --color-faint: #8a93a3;
+  --color-line: #d5dbe5;
+  --color-line-strong: #b9c2d0;
+
+  --color-pen: #2347c5;
+  --color-pen-dark: #1a3699;
+  --color-pen-wash: #e6ebfa;
+
+  --color-volt: #c98a00;
+  --color-volt-wash: #fbf1d9;
+  --color-aqua: #0e7c9e;
+  --color-aqua-wash: #dcf0f6;
+
+  --color-ok: #23824f;
+  --color-ok-wash: #e0f2e8;
+  --color-alert: #c42e2e;
+  --color-alert-wash: #fbe5e5;
+  --color-hold: #8a5a00;
+  --color-hold-wash: #f7ecd6;
+
+  --font-sans: var(--font-plex-thai), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-jamjuree), var(--font-plex-thai), sans-serif;
+
+  --radius-tag: 6px;
+  --radius-panel: 10px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "tnum" 1;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-pen);
+  outline-offset: 2px;
+}
+
+/* Mechanical meter counter: one box per digit, the decimal digit in red like a real dial. */
+.odo {
+  display: inline-flex;
+  gap: 2px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1;
+}
+.odo > span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.15em;
+  padding: 0.28em 0.1em;
+  border-radius: 3px;
+  background: var(--color-ink);
+  color: #fff;
+}
+.odo > span[data-frac] {
+  background: var(--color-alert);
+}
+.odo > span[data-empty] {
+  background: var(--color-line);
+  color: var(--color-faint);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

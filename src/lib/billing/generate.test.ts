@@ -39,7 +39,9 @@ describe("generateInvoiceItems", () => {
       [`charge:${COMMON_FEE}`, baht(300)],
     ]);
     expect(items[0].description).toBe("ค่าเช่าห้อง (ครึ่งเดือน)");
-    expect(items[2].description).toContain("คิดขั้นต่ำ");
+    expect(items[1].description).toBe("ค่าไฟฟ้า 45 หน่วย × 8");
+    expect(items[1].meta?.reason).toBe("มิเตอร์ 1,000 → 1,045");
+    expect(items[2].meta?.reason).toContain("คิดขั้นต่ำ 100 บาท");
     expect(invoiceTotal(items)).toBe(baht(2510));
     expect(warnings).toEqual([]);
   });
@@ -112,7 +114,7 @@ describe("generateInvoiceItems", () => {
     ];
     const item = byKey(input)["utility:electric"];
     expect(item.quantity).toBe(45);
-    expect(item.description).toContain("เปลี่ยนมิเตอร์");
+    expect(item.meta?.reason).toBe("เปลี่ยนมิเตอร์ 1,000 → 1,020, 0 → 25");
   });
 
   it("warns instead of failing when a meter reading is missing", () => {

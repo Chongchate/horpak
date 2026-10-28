@@ -47,7 +47,10 @@ export type BillingResult = { items: InvoiceItemDraft[]; occupancy: Occupancy; w
 
 const UTILITY_LABEL = { electric: "ค่าไฟฟ้า", water: "ค่าน้ำ" } as const;
 
-const fmtUnits = (n: number) => n.toLocaleString("th-TH", { minimumFractionDigits: 1, maximumFractionDigits: 2 });
+const fmtUnits = (n: number) => n.toLocaleString("th-TH", { maximumFractionDigits: 2 });
+
+/** Satang → "9" or "8.50" (no ".00" noise). */
+const fmtPrice = (s: Satang) => formatBaht(s).replace(/\.00$/, "");
 
 function auto(item: Omit<InvoiceItemDraft, "source" | "excluded" | "amount">): InvoiceItemDraft {
   return { ...item, source: "auto", excluded: false, amount: item.calculatedAmount ?? 0 };
@@ -88,18 +91,17 @@ export function generateInvoiceItems(input: BillingInput): BillingResult {
       warnings.push(`${label}: มิเตอร์วนรอบ (${fmtUnits(usage.units)} หน่วย) — ตรวจว่าไม่ได้จดเลขผิด`);
     }
 
+    // Main line: what is charged. Detail line (meta.reason): the meter readings behind it.
     let description: string;
-    if (u.rate.method === "flat") {
-      description = `${label} (เหมาจ่าย)`;
-    } else if (usage.segments.length > 1) {
-      description = `${label} ${fmtUnits(usage.units)} หน่วย (เปลี่ยนมิเตอร์)`;
-    } else {
-      const s = usage.segments[0];
-      description = `${label} ${fmtUnits(s.prev)} → ${fmtUnits(s.curr)} (${fmtUnits(usage.units)} หน่วย)`;
-    }
-    if (u.rate.method === "per_unit") description += ` × ${formatBaht(u.rate.unitPrice)}`;
-    if (u.rate.method === "tiered") description += " อัตราขั้นบันได";
-    if (charge.minChargeApplied) description += " — คิดขั้นต่ำ";
+    if (u.rate.method === "flat") description = `${label} เหมาจ่าย`;
+    else if (u.rate.method === "per_unit") description = `${label} ${fmtUnits(usage.units)} หน่วย × ${fmtPrice(u.rate.unitPrice)}`;
+    else description = `${label} ${fmtUnits(usage.units)} หน่วย อัตราขั้นบันได`;
+
+    const readings = usage.segments.map((s) => `${fmtUnits(s.prev)} → ${fmtUnits(s.curr)}`).join(", ");
+    const details = [
+      usage.segments.length > 1 ? `เปลี่ยนมิเตอร์ ${readings}` : readings && `มิเตอร์ ${readings}`,
+      charge.minChargeApplied && `ใช้น้อยกว่าขั้นต่ำ คิดขั้นต่ำ ${fmtPrice(charge.amount)} บาท`,
+    ].filter(Boolean);
 
     items.push(
       auto({
@@ -109,7 +111,7 @@ export function generateInvoiceItems(input: BillingInput): BillingResult {
         quantity: usage.units,
         unitPrice: u.rate.method === "per_unit" ? u.rate.unitPrice : null,
         calculatedAmount: charge.amount,
-        meta: { segments: usage.segments, rate: u.rate, minChargeApplied: charge.minChargeApplied },
+        meta: { segments: usage.segments, rate: u.rate, minChargeApplied: charge.minChargeApplied, reason: details.join(" ") || null },
       }),
     );
   }
